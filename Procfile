@@ -1,1 +1,1 @@
-web: gunicorn summarizer.wsgi
+web: gunicorn summarizer.wsgi --bind 0.0.0.0:$PORT
