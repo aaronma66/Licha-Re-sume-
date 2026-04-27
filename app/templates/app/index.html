@@ -1,0 +1,146 @@
+{% extends 'app/base.html' %}
+{% block title %}Licha Resume — Inicio{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container text-center">
+    <h1 class="mb-3">Resumí tu documento al instante</h1>
+    <p class="mb-0">Subí un PDF o Word de menos de 3,000 palabras y obtenés un resumen automático.<br>
+    También podés comparar similitud con otros documentos cargados. Aprovecha en ningún otro lado somos asi de generosos ;)</p>
+  </div>
+</section>
+
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- UPLOAD FORM -->
+    <div class="col-lg-5">
+      <div class="upload-card p-4" id="dropZone">
+        <form method="post" action="{% url 'upload' %}" enctype="multipart/form-data" id="uploadForm">
+          {% csrf_token %}
+          <div class="upload-icon">
+            <i class="bi bi-file-earmark-arrow-up"></i>
+          </div>
+          <h5 class="text-center text-navy fw-bold mb-1">Subir documento</h5>
+          <p class="text-center text-muted small mb-3">PDF o Word · Máx. 1,000 palabras · 5MB</p>
+
+          <div class="mb-3">
+            <input type="file" class="form-control" name="document" id="fileInput"
+                   accept=".pdf,.doc,.docx" required>
+          </div>
+
+          <!-- File preview -->
+          <div id="filePreview" class="d-none mb-3 p-2 rounded-3"
+               style="background:rgba(59,130,196,.07); border:1px solid rgba(59,130,196,.2);">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-file-earmark-text text-blue fs-5"></i>
+              <div>
+                <div class="fw-semibold small text-navy" id="previewName"></div>
+                <div class="text-muted" style="font-size:.75rem;" id="previewSize"></div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100" id="submitBtn">
+            <i class="bi bi-cpu me-1"></i> Resumir documento
+          </button>
+        </form>
+      </div>
+
+      <!-- Info panel -->
+      <div class="mt-3 p-3 rounded-3" style="background:rgba(245,184,0,.08); border:1px solid rgba(245,184,0,.3);">
+        <h6 class="text-navy fw-semibold mb-2"><i class="bi bi-info-circle me-1 text-warning"></i>¿Cómo funciona?</h6>
+        <ul class="list-unstyled small text-muted mb-0">
+          <li class="mb-1"><i class="bi bi-1-circle-fill text-blue me-1"></i>Subís tu documento PDF o Word</li>
+          <li class="mb-1"><i class="bi bi-2-circle-fill text-blue me-1"></i>El sistema extrae y resume el texto</li>
+          <li class="mb-1"><i class="bi bi-3-circle-fill text-blue me-1"></i>Podés comparar con otros resúmenes</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SUMMARIES LIST -->
+    <div class="col-lg-7">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="page-title mb-0">
+          <i class="bi bi-collection me-2 text-blue"></i>Resúmenes cargados
+        </h5>
+        <span class="card-badge-blue">{{ summaries|length }} documento{{ summaries|length|pluralize }}</span>
+      </div>
+
+      {% if summaries %}
+        {% for doc in summaries %}
+        <div class="summary-card p-3 mb-3">
+          <div class="d-flex align-items-start justify-content-between gap-2">
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                <i class="bi bi-file-earmark-text text-blue"></i>
+                <span class="fw-semibold text-navy text-truncate" style="max-width:260px;">
+                  {{ doc.original_filename }}
+                </span>
+                <span class="card-badge-yellow">{{ doc.word_count }} palabras</span>
+              </div>
+              <p class="text-muted small mb-1" style="line-height:1.5;">
+                {{ doc.summary|truncatechars:140 }}
+              </p>
+              <span class="text-muted" style="font-size:.75rem;">
+                <i class="bi bi-clock me-1"></i>{{ doc.uploaded_at|date:"d/m/Y H:i" }}
+              </span>
+            </div>
+            <a href="{% url 'detail' doc.pk %}"
+               class="btn btn-sm btn-outline-primary flex-shrink-0">
+              Ver <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-inbox" style="font-size:3rem; opacity:.3; display:block; margin-bottom:1rem;"></i>
+          <p>Todavía no hay documentos cargados.<br>¡Subí el primero!</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // File input preview
+  document.getElementById('fileInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    document.getElementById('previewName').textContent = file.name;
+    document.getElementById('previewSize').textContent =
+      (file.size / 1024).toFixed(1) + ' KB';
+    document.getElementById('filePreview').classList.remove('d-none');
+  });
+
+  // Drag and drop
+  const zone = document.getElementById('dropZone');
+  const input = document.getElementById('fileInput');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change'));
+    }
+  });
+
+  // Loading state on submit
+  document.getElementById('uploadForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
+  });
+</script>
+{% endblock %}
