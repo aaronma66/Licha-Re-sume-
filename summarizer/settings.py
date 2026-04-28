@@ -66,3 +66,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Max upload size: 5MB
 MAX_UPLOAD_SIZE = 30 * 1024 * 1024
+CSRF_TRUSTED_ORIGINS = ['https://licha-re-sume-production.up.railway.app/']
