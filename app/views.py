@@ -55,11 +55,11 @@ def upload_document(request):
 
         word_count = count_words(text)
 
-        if word_count > 5000:
+        if word_count > 25000:
             os.remove(full_path)
             messages.error(
                 request,
-                f'El documento tiene {word_count:,} palabras. El máximo permitido es 5,000.'
+                f'El documento tiene {word_count:,} palabras. El máximo permitido es 25,000.'
             )
             return redirect('index')
 
