@@ -55,7 +55,7 @@ def upload_document(request):
 
         word_count = count_words(text)
 
-        if word_count > 3000:
+        if word_count > 5000:
             os.remove(full_path)
             messages.error(
                 request,
