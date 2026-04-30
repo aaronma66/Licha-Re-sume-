@@ -38,7 +38,7 @@ def upload_document(request):
 
     # Validate file size
     if uploaded_file.size > settings.MAX_UPLOAD_SIZE:
-        messages.error(request, 'El archivo supera el límite de 5MB.')
+        messages.error(request, 'El archivo supera el límite de 30MB.')
         return redirect('index')
 
     # Save file temporarily
@@ -59,7 +59,7 @@ def upload_document(request):
             os.remove(full_path)
             messages.error(
                 request,
-                f'El documento tiene {word_count:,} palabras. El máximo permitido es 3,000.'
+                f'El documento tiene {word_count:,} palabras. El máximo permitido es 5,000.'
             )
             return redirect('index')
 
